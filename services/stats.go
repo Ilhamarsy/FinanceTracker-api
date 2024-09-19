@@ -69,3 +69,25 @@ func (s *StatService) GetStats(userId uint) (*models.Stat, error) {
 
 	return &stat, nil
 }
+
+func (s *StatService) GetYearlyStats(userID uint, year int) (map[string][]models.MonthlyTotal, error) {
+	// Get expense totals by month
+	expenseTotals, err := s.expenseRepo.GetMonthlyTotals(userID, year)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get income totals by month
+	incomeTotals, err := s.incomeRepo.GetMonthlyTotals(userID, year)
+	if err != nil {
+		return nil, err
+	}
+
+	// Combine both into a single map
+	stats := map[string][]models.MonthlyTotal{
+		"expenses": expenseTotals,
+		"incomes":  incomeTotals,
+	}
+
+	return stats, nil
+}

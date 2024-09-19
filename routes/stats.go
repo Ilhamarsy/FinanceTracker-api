@@ -13,5 +13,6 @@ func StatRoutes(router *gin.Engine, statController *controllers.StatController) 
 		protected := api.Group("/")
 		protected.Use(middlewares.JWTAuthMiddleware())
 		protected.GET("/stats", statController.GetStats)
+		protected.GET("/stats-yearly", statController.GetYearlyStats)
 	}
 }

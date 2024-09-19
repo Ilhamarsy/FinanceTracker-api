@@ -4,6 +4,7 @@ import (
 	"finance-tracker/models"
 	"finance-tracker/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,4 +53,23 @@ func (c *CategoryController) GetCategories(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": categories})
+}
+
+func (c *CategoryController) DeleteCategory(ctx *gin.Context) {
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "User ID not found"})
+		return
+	}
+
+	if categoryID, err := strconv.ParseUint(ctx.Param("id"), 10, 64); err == nil {
+		if err := c.categoryService.DeleteCategory(uint(categoryID), userID.(uint)); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"status": "fail", "message": err.Error()})
+			return
+		}
+	} else {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid id"})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": "Category deleted successfully"})
 }

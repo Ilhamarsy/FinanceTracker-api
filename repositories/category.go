@@ -35,3 +35,15 @@ func (r *CategoryRepository) FindCategoriesByIDs(userId uint, ids []uint) ([]mod
 	}
 	return categories, nil
 }
+
+func (r *CategoryRepository) DeleteCategory(id, userId uint) error {
+	return r.DB.Where("id =? AND user_id =?", id, userId).Delete(&models.Category{}).Error
+}
+
+func (r *CategoryRepository) PreloadCategories(expense *models.Expense) error {
+	return r.DB.Preload("Categories").Find(expense).Error
+}
+
+func (r *CategoryRepository) RemoveCategoriesFromExpense(expense *models.Expense, categories []models.Category) error {
+	return r.DB.Model(expense).Association("Categories").Delete(categories)
+}

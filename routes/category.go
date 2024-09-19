@@ -14,5 +14,6 @@ func CategoryRoutes(router *gin.Engine, categoryController *controllers.Category
 		protected.Use(middlewares.JWTAuthMiddleware())
 		protected.POST("/category", categoryController.CreateCategory)
 		protected.GET("/categories", categoryController.GetCategories)
+		protected.DELETE("/category/:id", categoryController.DeleteCategory)
 	}
 }

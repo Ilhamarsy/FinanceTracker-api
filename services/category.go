@@ -25,3 +25,9 @@ func (s *CategoryService) CreateCategory(category *models.Category) error {
 func (s *CategoryService) GetCategories(userID uint) ([]models.Category, error) {
 	return s.repo.GetCategories(userID)
 }
+
+func (s *CategoryService) DeleteCategory(categoryId, userId uint) error {
+	return s.repo.DeleteCategory(categoryId, userId)
+}
+
+//FindCategoriesByIDs finds categories by their IDs

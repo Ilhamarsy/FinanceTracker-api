@@ -56,22 +56,48 @@ func (e *ExpenseRepository) GetMonthlyExpense(userID uint) (float64, error) {
 		return 0, err
 	}
 
-	fmt.Println(expense["total_expense"].(float64))
+	fmt.Println(expense["total_expense"])
 
-	return expense["total_expense"].(float64), nil
+	if totalExpense, ok := expense["total_expense"]; ok && totalExpense != nil {
+		return totalExpense.(float64), nil
+	}
+
+	return 0, nil
 }
 
 func (e *ExpenseRepository) GetTotalExpense(userID uint) (float64, error) {
-	var total_expense float64
+	var expense map[string]interface{}
 	query := `SELECT SUM(amount) as total_expense
 						FROM expenses 
 						WHERE user_id = ? 
 						AND deleted_at IS NULL`
 
-	err := e.DB.Raw(query, userID).Scan(&total_expense).Error
+	err := e.DB.Raw(query, userID).Scan(&expense).Error
 	if err != nil {
 		return 0, err
 	}
 
-	return total_expense, nil
+	if totalExpense, ok := expense["total_expense"]; ok && totalExpense != nil {
+		return totalExpense.(float64), nil
+	}
+
+	return 0, nil
+}
+
+func (e *ExpenseRepository) GetMonthlyTotals(userID uint, year int) ([]models.MonthlyTotal, error) {
+	var monthlyTotals []models.MonthlyTotal
+
+	err := e.DB.
+		Table("expenses").
+		Select("EXTRACT(MONTH FROM created_at) as month, SUM(amount) as total").
+		Where("user_id = ? AND EXTRACT(YEAR FROM created_at) = ?", userID, year).
+		Group("EXTRACT(MONTH FROM created_at)").
+		Order("EXTRACT(MONTH FROM created_at)").
+		Scan(&monthlyTotals).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return monthlyTotals, nil
 }

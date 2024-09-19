@@ -56,20 +56,46 @@ func (i *IncomeRepository) GetMonthlyIncome(userID uint) (float64, error) {
 		return 0, err
 	}
 
-	return income["total_income"].(float64), nil
+	if totalIncome, ok := income["total_income"]; ok && totalIncome != nil {
+		return totalIncome.(float64), nil
+	}
+
+	return 0, nil
 }
 
 func (i *IncomeRepository) GetTotalIncome(userID uint) (float64, error) {
-	var total_amount float64
+	var income map[string]interface{}
 	query := `SELECT SUM(amount) AS total_income 
 						FROM incomes 
 						WHERE user_id = ? 
 						AND deleted_at IS NULL`
 
-	err := i.DB.Raw(query, userID).Scan(&total_amount).Error
+	err := i.DB.Raw(query, userID).Scan(&income).Error
 	if err != nil {
 		return 0, err
 	}
 
-	return total_amount, nil
+	if totalIncome, ok := income["total_income"]; ok && totalIncome != nil {
+		return totalIncome.(float64), nil
+	}
+
+	return 0, nil
+}
+
+func (e *IncomeRepository) GetMonthlyTotals(userID uint, year int) ([]models.MonthlyTotal, error) {
+	var monthlyTotals []models.MonthlyTotal
+
+	err := e.DB.
+		Table("incomes").
+		Select("EXTRACT(MONTH FROM created_at) as month, SUM(amount) as total").
+		Where("user_id = ? AND EXTRACT(YEAR FROM created_at) = ?", userID, year).
+		Group("EXTRACT(MONTH FROM created_at)").
+		Order("EXTRACT(MONTH FROM created_at)").
+		Scan(&monthlyTotals).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return monthlyTotals, nil
 }
